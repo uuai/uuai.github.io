@@ -1,61 +1,88 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>上传文件</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        input.file 
+        {
+            position: relative;
+            -moz-opacity:0 ;
+            filter:alpha(opacity: 0);
+            opacity: 0;
+            z-index: 2;
+        } 
+        .wrapper{
+            color: #fff;
+            background-color: #31b0d5;
+            border-color: #269abc;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            display: inline-block;
+            padding: 6px 12px;
+            margin-bottom: 0;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.42857143;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            -ms-touch-action: manipulation;
+            touch-action: manipulation;
+            cursor: pointer;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            background-image: none;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 <body>
-<!--video用于显示媒体设备的视频流，自动播放-->
-<video  id="video" autoplay style="width: 480px;height: 320px"></video>
-<!--拍照按钮-->
-<div>
-    <button id="capture">拍照</button>
-</div>
-    <input type="file"  capture="camera" accept="image/*,video/*" name="" value="摄像" >
-<!--描绘video截图-->
-<canvas id="canvas" width="480" height="320"></canvas>
+    <div id="app" v-cloak>
+        <h4>上传视频demo</h4>
+        <div>
+            <span type="primary" class="wrapper">
+                <label class="btn" for="fileUpload">上传视频demo</label>
+            </span>
+            <input type="file" accept="video/*" id="fileUpload" style="position:absolute; clip:rect(0 0 0 0);"  @change="uploadVideo($event)">
+        </div>
+    </div>
+    <script>
+    var app = new Vue({
+        el: '#app',
+        data: {
 
-</body>
-<script>
-    var video = document.getElementById('video');
-    var canvas = document.getElementById('canvas');
-    var capture = document.getElementById('capture');
-    var context = canvas.getContext('2d');
-    function getUserMediaToPhoto(constraints,success,error) {
-        if(navigator.mediaDevices.getUserMedia){
-            //最新标准API
-            navigator.mediaDevices.getUserMedia(constraints).then(success).catch(error);
-        }else if (navigator.webkitGetUserMedia) {
-            //webkit核心浏览器
-            navigator.webkitGetUserMedia(constraints,success,error);
-        }else if(navigator.mozGetUserMedia){
-            //firefox浏览器
-            navigator.mozGetUserMedia(constraints,success,error);
-        }else if(navigator.getUserMedia){
-            //旧版API
-            navigator.getUserMedia(constraints,success,error);
+        },
+        methods: {
+            uploadVideo(e) {
+                //e.target.value文件名
+                var file = e.target.files[0];
+                var formdata = new FormData();
+                formdata.append('fileStream', file);
+                console.log('正在上传视频...')
+                this.doUpload(formdata);
+            },
+            doUpload(formdata) {
+                axios.post('/teacher/doUpload', formdata).then(res => {
+                    if (res.data.success) {
+                        console.log('上传成功');
+                    } else {
+                        console.log('上传失败');
+                    }
+                }).catch(err => {
+                    console.log(err);
+                })
+            }
         }
-    }
-    //成功回调函数
-    function success(stream){
-        //兼容webkit核心浏览器
-        var CompatibleURL = window.URL || window.webkitURL;
-        //将视频流转化为video的源
-        video.src = CompatibleURL.createObjectURL(stream);
-        video.play();//播放视频
-    }
-    function error(error) {
-        console.log('访问用户媒体失败：',error.name,error.message);
-    }
-    if(navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.getUserMedia){
-        getUserMediaToPhoto({video:{width:480,height:320}},success,error);
-    }else{
-        alert('你的浏览器不支持访问用户媒体设备');
-    }
-    capture.addEventListener('click',function() {
-        // 将video画面描绘在canvas画布上
-        context.drawImage(video,0,0,480,320);
-    })
-</script>
-
+    });
+    </script>
+</body>
 </html>
